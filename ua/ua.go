@@ -1,4 +1,4 @@
-package userAgent
+package ua
 
 type UserAgent struct{}
 

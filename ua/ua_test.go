@@ -1,4 +1,4 @@
-package userAgent
+package ua
 
 import (
 	"log"
