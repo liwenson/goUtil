@@ -1,6 +1,7 @@
-package ua
+package useragent
 
 import (
+	"embed"
 	"encoding/json"
 	"math/rand"
 	"sync"
@@ -51,10 +52,12 @@ var (
 	}
 )
 
-func init() {
-	f := NewFileCache("fake_useragent.json")
+//go:embed fake_useragent.json
+var fuseragent embed.FS
 
-	cacheContent, _ := f.Read()
+func init() {
+
+	cacheContent, _ := fuseragent.ReadFile("fake_useragent.json")
 
 	json.Unmarshal(cacheContent, &M)
 
