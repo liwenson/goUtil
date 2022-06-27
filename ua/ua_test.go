@@ -6,9 +6,8 @@ import (
 )
 
 func TestUserAgent(t *testing.T) {
-	var ua UA
-	{
-	}
+	var ua UserAgent
+
 	if ua.Random() == "" {
 		t.Error("browser.Random is empty")
 	}
@@ -17,4 +16,3 @@ func TestUserAgent(t *testing.T) {
 	log.Println(ua.Android())
 	log.Println(ua.Chrome())
 }
-

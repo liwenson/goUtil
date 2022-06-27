@@ -13,11 +13,10 @@ type File struct {
 	CompletePath string
 }
 
-func NewFileCache(dir string, name string) *File {
+func NewFileCache(name string) *File {
 	return &File{
-		Dir:          dir,
 		Name:         name,
-		CompletePath: dir + name,
+		CompletePath: name,
 	}
 }
 

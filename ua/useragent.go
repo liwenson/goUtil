@@ -52,7 +52,7 @@ var (
 )
 
 func init() {
-	f := NewFileCache("./", "fake_useragent.json")
+	f := NewFileCache("fake_useragent.json")
 
 	cacheContent, _ := f.Read()
 
