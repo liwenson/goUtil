@@ -40,7 +40,7 @@ func writeLogToFile(msg LogMsg) {
 		logName = "access"
 	}
 
-	fmt.Println("name:",logName)
+	//fmt.Println("name:",logName)
 
 	//打开文件 //判断文件是否存在
 	f, err := CreatFile(logName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)

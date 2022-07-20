@@ -22,18 +22,20 @@ const (
 	ERR_LEVEL_ERROR
 	ERR_LEVEL_FATAL
 	ERR_LEVEL_ACCESS
+	NGX_LEVEL_ACCESS
 )
 
 const (
-	LogSyncMode = iota // 同步写入模式
-	LogPoolMode        // 异步协程池模式
+	LogSyncMode = iota // 0 同步写入模式
+	LogPoolMode        // 1 异步协程池模式
 )
 
 var content interface{}
 
 type Log struct {
-	Mode int
-	Name string
+	Mode    int
+	Name    string
+	LogChan int64
 }
 
 // SetMode 配置log日志模式
@@ -55,6 +57,10 @@ func (l *Log) GetName() string {
 	return l.Name
 }
 
+func (l *Log) SetLogChan(num int64) {
+	l.LogChan = num
+}
+
 var LogChan *chanx.UnboundedChan
 
 var log Log
@@ -64,7 +70,8 @@ func init() {
 
 	LogChan = chanx.NewUnboundedChan(1000)
 
-	log.SetMode(LogPoolMode)
+	// 默认为同步写入
+	log.SetMode(LogSyncMode)
 
 	go getChanLogToFile(LogChan)
 
@@ -101,14 +108,15 @@ return string
 func LogContent(errLevel, layer int, LogName, Info string, IsContent bool) LogMsg {
 	timeString := time.Now().Format("2006-01-02 15:04:05.000")
 	txtMap := map[int]string{
-		ERR_LEVEL_NO:      "[N]", // normal
-		ERR_LEVEL_DEBUG:   "[D]", // debug
-		ERR_LEVEL_TRACE:   "[T]", // trace
-		ERR_LEVEL_INFO:    "[I]", // info
-		ERR_LEVEL_WARNING: "[W]", // warning
-		ERR_LEVEL_ERROR:   "[E]", // error
-		ERR_LEVEL_FATAL:   "[F]", // fatal
-		ERR_LEVEL_ACCESS:  "[A]", // access
+		ERR_LEVEL_NO:      "[N]",   // normal
+		ERR_LEVEL_DEBUG:   "[D]",   // debug
+		ERR_LEVEL_TRACE:   "[T]",   // trace
+		ERR_LEVEL_INFO:    "[I]",   // info
+		ERR_LEVEL_WARNING: "[W]",   // warning
+		ERR_LEVEL_ERROR:   "[E]",   // error
+		ERR_LEVEL_FATAL:   "[F]",   // fatal
+		ERR_LEVEL_ACCESS:  "[A]",   // access
+		NGX_LEVEL_ACCESS:  "[NGX]", // access
 	}
 
 	var logMsg LogMsg
@@ -119,7 +127,8 @@ func LogContent(errLevel, layer int, LogName, Info string, IsContent bool) LogMs
 	if txtMap[errLevel] == "[A]" {
 		// 访问请求不需要代码行数
 		msg = timeString + " " + txtMap[errLevel] + " " + fmt.Sprintf("%v", Info) + "" + "\n"
-
+	} else if txtMap[errLevel] == "[NGX]" {
+		msg = fmt.Sprintf("%v", Info) + "" + "\n"
 	} else if IsContent {
 		msg = timeString + " " + getLayerCode(layer) + " " + txtMap[errLevel] + " " + fmt.Sprintf("%v", Info) + " " + fmt.Sprintf("%v", content) + "\n"
 	} else {
@@ -166,10 +175,9 @@ func logWriteToScene(errLevel int, logName, logMsg string, content bool) {
 	switch log.Mode {
 
 	case 0: // 文件 no goroutine
+		// 直接写入文件
 		logmsg.Mode = 0
 		writeLogToFile(logmsg)
-
-		fmt.Println("写入文件")
 
 	case 1: // 发送到通道 ToChan
 		logmsg.Mode = 1
@@ -179,19 +187,22 @@ func logWriteToScene(errLevel int, logName, logMsg string, content bool) {
 		default:
 			//当通道满了，走这，丢弃日志，保证不出现阻塞
 			fmt.Println("通道满了")
-
 		}
 
 	default: //终端
-		fmt.Println("终端...")
+		fmt.Println(logmsg)
 		//outputToTerminal(logmsg)
 	}
 
-	//close(LogChan.In)
+	close(LogChan.In)
 }
 
 func Access(hostname, logInfo string, arg ...interface{}) {
 	logWriteToScene(ERR_LEVEL_ACCESS, hostname, logInfo, false)
+}
+
+func Nginx(hostname, logInfo string, arg ...interface{}) {
+	logWriteToScene(NGX_LEVEL_ACCESS, hostname, logInfo, false)
 }
 
 func Trace(logInfo string, arg ...interface{}) {
@@ -251,7 +262,6 @@ func Fatal(logInfo string, arg ...interface{}) {
 		content = arg
 		logWriteToScene(ERR_LEVEL_FATAL, log.GetName(), logInfo, true)
 	}
-
 }
 
 type LogMsg struct {

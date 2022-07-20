@@ -11,10 +11,6 @@ import (
 	"time"
 )
 
-/*
-   .go : 自定义的一些文件操作
-*/
-
 var DefaultPerm = os.ModeDir | os.ModePerm
 
 // CutFileByDateTimeFormat 按日期切割文件的名称时间格式
@@ -32,7 +28,6 @@ const LogFileMaxSize = 1 * 1024 * 1024 // 1 * 1024 * 1024  //1m
 
 /*
    func    创建目录
-   author  zydh[朝游东海]
    param   dirPath string      文件路径
    param   perm    uint32      文件权限 0644
    return  bool    返回信息
@@ -51,7 +46,6 @@ func MkdirFile(dirPath string, perm os.FileMode) (bool bool, errInfo error, ) {
 
 /*
    func  创建完整目录路径，即中间目录不存在的话也一起创建
-   author  zydh[朝游东海]
    param   dirPath string      文件路径
    param   perm    uint32      文件权限 0644
    return  bool    返回信息
@@ -103,14 +97,6 @@ func GetFileNameByPath(path string) string {
 	filetemp := strings.Split(path, "/")
 	filename := filetemp[len(filetemp)-1]
 
-	//fo, err := os.Stat(path)
-	//if err != nil {
-	//	fmt.Println("- open file fail ,file path:"+path, err)
-	//	//log.Error("open file fail ,file path:" + path,err)
-	//	return ""
-	//}
-	//fmt.Println("fo:",fo.Name())
-	//return fo.Name()
 	return filename
 }
 
